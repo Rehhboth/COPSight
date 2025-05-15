@@ -61,13 +61,23 @@ SLACK_API_URL = "https://slack.com/api"
 
 # Function to get credentials
 def get_credentials():
-    return service_account.Credentials.from_service_account_info(
-        SERVICE_ACCOUNT_JSON,
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive"
-        ]
-    )
+    try:
+        # Convert the service account JSON to a dictionary if it's a string
+        if isinstance(SERVICE_ACCOUNT_JSON, str):
+            service_account_info = json.loads(SERVICE_ACCOUNT_JSON)
+        else:
+            service_account_info = SERVICE_ACCOUNT_JSON
+            
+        return service_account.Credentials.from_service_account_info(
+            service_account_info,
+            scopes=[
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive"
+            ]
+        )
+    except Exception as e:
+        logging.error(f"Error creating credentials: {e}")
+        raise e
 
 # Function to format time in a human-readable way
 def format_time(seconds: float) -> str:
