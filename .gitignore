@@ -64,4 +64,3 @@ firebase-debug.*.log
 docker-compose.override.yml 
 
 *.toml
-Copsight_V3.py

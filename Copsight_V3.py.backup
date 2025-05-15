@@ -33,9 +33,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 # Global variables
-SERVICE_ACCOUNT_JSON = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"]
-    )
+SERVICE_ACCOUNT_JSON = st.secrets["GOOGLE_SERVICE_ACCOUNT_JSON"]
 SHEET_ID = st.secrets["SHEET_ID"]
 OUTPUT_SHEET_ID = st.secrets["OUTPUT_SHEET_ID"]
 PROMPTS_SHEET_ID = st.secrets["PROMPTS_SHEET_ID"]
