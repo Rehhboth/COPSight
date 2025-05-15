@@ -35,7 +35,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Global variables
 SERVICE_ACCOUNT_JSON = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"]
-    )
+)
 SHEET_ID = st.secrets["SHEET_ID"]
 OUTPUT_SHEET_ID = st.secrets["OUTPUT_SHEET_ID"]
 PROMPTS_SHEET_ID = st.secrets["PROMPTS_SHEET_ID"]
@@ -58,7 +58,7 @@ except LookupError:
 vader_analyzer = SentimentIntensityAnalyzer()
 
 # Add Slack configuration
-SLACK_BOT_TOKEN = os.getenv('SLACK_BOT_TOKEN', st.secrets.get("SLACK_BOT_TOKEN", ""))
+SLACK_BOT_TOKEN = st.secrets["SLACK_BOT_TOKEN"]
 SLACK_API_URL = "https://slack.com/api"
 
 # Function to format time in a human-readable way
