@@ -33,9 +33,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 # Global variables
-SERVICE_ACCOUNT_JSON = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"]
-)
+SERVICE_ACCOUNT_JSON = st.secrets["gcp_service_account"]
 SHEET_ID = st.secrets["SHEET_ID"]
 OUTPUT_SHEET_ID = st.secrets["OUTPUT_SHEET_ID"]
 PROMPTS_SHEET_ID = st.secrets["PROMPTS_SHEET_ID"]
@@ -60,6 +58,16 @@ vader_analyzer = SentimentIntensityAnalyzer()
 # Add Slack configuration
 SLACK_BOT_TOKEN = st.secrets["SLACK_BOT_TOKEN"]
 SLACK_API_URL = "https://slack.com/api"
+
+# Function to get credentials
+def get_credentials():
+    return service_account.Credentials.from_service_account_info(
+        SERVICE_ACCOUNT_JSON,
+        scopes=[
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+        ]
+    )
 
 # Function to format time in a human-readable way
 def format_time(seconds: float) -> str:
@@ -98,13 +106,7 @@ def fetch_and_format_conversations():
     try:
         loading_container = show_loading_indicator(message="Fetching conversations from Google Sheet...")
         
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_JSON,
-            scopes=[
-                "https://www.googleapis.com/auth/spreadsheets",
-                "https://www.googleapis.com/auth/drive"
-            ]
-        )
+        credentials = get_credentials()
         client = gspread.authorize(credentials)
         sheet = client.open_by_key(SHEET_ID).worksheet('Raw Data')
         data = sheet.get_all_records()
@@ -142,13 +144,7 @@ def fetch_and_format_conversations():
 
 # Function to load prompts from Google Sheet
 def load_prompts():
-    credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_JSON,
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive"
-        ]
-    )
+    credentials = get_credentials()
     client = gspread.authorize(credentials)
     sheet = client.open_by_key(PROMPTS_SHEET_ID).worksheet('Prompts')
     headers = sheet.row_values(1)  # Headers in row 1 (A1:E1)
@@ -181,13 +177,7 @@ def write_to_google_sheet(evaluation_data: pd.DataFrame, sheet_id: str, sheet_na
     Drops duplicates based on 'Ticket ID', keeping the latest entry.
     """
     try:
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_JSON,
-            scopes=[
-                "https://www.googleapis.com/auth/spreadsheets",
-                "https://www.googleapis.com/auth/drive"
-            ]
-        )
+        credentials = get_credentials()
         client = gspread.authorize(credentials)
         spreadsheet = client.open_by_key(sheet_id)
         
@@ -387,10 +377,7 @@ Reasoning: [brief explanation]
 def get_evaluated_conversation_ids():
    """Get list of already evaluated conversation IDs from COPSight Dump"""
    try:
-       credentials = service_account.Credentials.from_service_account_file(
-           SERVICE_ACCOUNT_JSON,
-           scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
-       )
+       credentials = get_credentials()
        client = gspread.authorize(credentials)
        sheet = client.open_by_key(OUTPUT_SHEET_ID).worksheet('COPSight Dump')
        data = sheet.get_all_records()
@@ -678,13 +665,7 @@ def display_consolidated_report():
         loading_container = show_loading_indicator(message="Generating consolidated report...")
         
         # Authenticate and fetch data
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_JSON,
-            scopes=[
-                "https://www.googleapis.com/auth/spreadsheets.readonly",
-                "https://www.googleapis.com/auth/drive.readonly"
-            ]
-        )
+        credentials = get_credentials()
         client = gspread.authorize(credentials)
 
         # Load data from Google Sheet
@@ -800,13 +781,7 @@ def display_consolidated_report():
 
 def get_associate_drive_id(associate_name):
     """Fetch Drive ID for associate from 'Associate List' in Prompts sheet (column A: name, column C: drive id)."""
-    credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_JSON,
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets.readonly",
-            "https://www.googleapis.com/auth/drive"
-        ]
-    )
+    credentials = get_credentials()
     client = gspread.authorize(credentials)
     sheet = client.open_by_key(PROMPTS_SHEET_ID).worksheet('Associate List')
     rows = sheet.get_all_values()
@@ -1011,10 +986,7 @@ def create_scorecard_pdf(csa_data, month, csa_name):
 
 def upload_pdf_to_drive(pdf_bytes, drive_id, filename):
     """Upload PDF to Google Drive folder using Drive ID."""
-    credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_JSON,
-        scopes=["https://www.googleapis.com/auth/drive"]
-    )
+    credentials = get_credentials()
     service = build('drive', 'v3', credentials=credentials)
     file_metadata = {
         'name': filename,
@@ -1030,13 +1002,7 @@ def generate_csa_scorecard():
         loading_container = show_loading_indicator(message="Generating CSA scorecard...")
         
         # Fetch COPSight Dump data
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_JSON,
-            scopes=[
-                "https://www.googleapis.com/auth/spreadsheets.readonly",
-                "https://www.googleapis.com/auth/drive"
-            ]
-        )
+        credentials = get_credentials()
         client = gspread.authorize(credentials)
         sheet = client.open_by_key(OUTPUT_SHEET_ID).worksheet('COPSight Dump')
         data = sheet.get_all_records()
