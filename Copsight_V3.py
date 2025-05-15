@@ -118,7 +118,36 @@ def fetch_and_format_conversations():
         
         credentials = get_credentials()
         client = gspread.authorize(credentials)
-        sheet = client.open_by_key(SHEET_ID).worksheet('Raw Data')
+        
+        # Add logging for debugging
+        logging.info(f"Attempting to access sheet with ID: {SHEET_ID}")
+        
+        try:
+            spreadsheet = client.open_by_key(SHEET_ID)
+            logging.info("Successfully accessed spreadsheet")
+        except gspread.exceptions.SpreadsheetNotFound:
+            error_msg = f"Spreadsheet not found with ID: {SHEET_ID}. Please check if the ID is correct and the service account has access."
+            logging.error(error_msg)
+            hide_loading_indicator(loading_container)
+            st.error(error_msg)
+            raise ValueError(error_msg)
+        except Exception as e:
+            error_msg = f"Error accessing spreadsheet: {str(e)}"
+            logging.error(error_msg)
+            hide_loading_indicator(loading_container)
+            st.error(error_msg)
+            raise e
+            
+        try:
+            sheet = spreadsheet.worksheet('Raw Data')
+            logging.info("Successfully accessed 'Raw Data' worksheet")
+        except gspread.exceptions.WorksheetNotFound:
+            error_msg = "Worksheet 'Raw Data' not found in the spreadsheet. Please check if the worksheet exists."
+            logging.error(error_msg)
+            hide_loading_indicator(loading_container)
+            st.error(error_msg)
+            raise ValueError(error_msg)
+            
         data = sheet.get_all_records()
         df = pd.DataFrame(data)
 
